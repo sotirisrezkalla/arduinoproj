@@ -1,0 +1,62 @@
+// ---------- PINS ----------
+const int LED = 4;            // simple night light LED (Task 1)
+const int photoPin = A0;      // photoresistor (INPUT)
+
+const int pinRED = 9;         // RGB LED red leg (Task 2)
+const int pinGREEN = 10;      // RGB LED green leg
+const int pinBLUE = 11;       // RGB LED blue leg
+
+// ---------- VARIABLES ----------
+int light_value;
+const int threshold = 70;        // below this = dark
+const int brightThreshold = 130;  // above this = bright
+                                  // in between = medium
+
+// ---------- COLOR FUNCTION ----------
+// Sets the RGB LED color. Each value goes from 0 (off) to 255 (full).
+void setColor(int R, int G, int B) {
+  analogWrite(pinRED, R);
+  analogWrite(pinGREEN, G);
+  analogWrite(pinBLUE, B);
+}
+
+void setup()
+{
+  pinMode(LED, OUTPUT);
+  pinMode(pinRED, OUTPUT);
+  pinMode(pinGREEN, OUTPUT);
+  pinMode(pinBLUE, OUTPUT);
+  Serial.begin(9600);
+}
+
+void loop()
+{
+  // Read the light level from the photoresistor
+  light_value = analogRead(photoPin);
+  Serial.print(light_value);
+  Serial.print(" - ");
+
+  // ----- TASK 1: night light -----
+  if (light_value < threshold) {
+    digitalWrite(LED, HIGH);    // dark -> LED on
+  }
+  else {
+    digitalWrite(LED, LOW);     // light -> LED off
+  }
+
+  // ----- TASK 2: RGB LED changes color with light level -----
+  if (light_value < threshold) {
+    setColor(255, 0, 0);        // dark -> RED
+    Serial.println("RED");
+  }
+  else if (light_value < brightThreshold) {
+    setColor(0, 255, 0);        // medium -> GREEN
+    Serial.println("GREEN");
+  }
+  else {
+    setColor(0, 0, 255);        // bright -> BLUE
+    Serial.println("BLUE");
+  }
+
+  delay(100);
+}

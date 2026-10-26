@@ -1,0 +1,95 @@
+/*
+DC Motor Speed Control with Potentiometer and LED Indicators (L293D version)
+The potentiometer selects one of three motor speeds (slow, medium, fast).
+One LED per speed shows which speed is active, and the Serial Monitor
+prints the pulse width (PWM value) being sent to the motor.
+WIRING (L293D: notch at top, chip pin 1 top-left, count down the left side
+and then up the right side)
+Potentiometer: outer pins to 5V and GND, middle (wiper) pin to Arduino A1
+Arduino pin 5 -> chip pin 1 (1,2EN, PWM controls SPEED)
+Arduino pin 7 -> chip pin 2 (1A, controls DIRECTION)
+Arduino pin 4 -> chip pin 7 (2A, controls DIRECTION)
+Chip pin 3 (1Y) -> motor lead 1
+Chip pin 6 (2Y) -> motor lead 2
+Chip pin 16 (VCC1) -> 5V (logic power)
+Chip pin 8 (VCC2) -> 5V (motor power)
+Chip pins 4, 5, 12, 13 -> GND (shared with Arduino GND)
+Chip pin 9 (3,4EN) -> GND (keeps the unused half of the chip disabled)
+LED 1: Arduino pin 2 -> 220 ohm resistor -> LED -> GND
+LED 2: Arduino pin 8 -> 220 ohm resistor -> LED -> GND
+LED 3: Arduino pin 9 -> 220 ohm resistor -> LED -> GND
+/
+// ---------- Pin assignments ----------
+const int potPin = A1; // Analog input pin the potentiometer wiper is connected to
+const int enablePin = 5; // L293D enable pin (chip pin 1); PWM here sets the motor speed
+const int in1Pin = 7; // L293D input 1 (chip pin 2); sets motor direction
+const int in2Pin = 4; // L293D input 2 (chip pin 7); sets motor direction
+const int led1Pin = 2; // LED 1: lights up for SLOW speed
+const int led2Pin = 8; // LED 2: lights up for MEDIUM speed
+const int led3Pin = 9; // LED 3: lights up for FAST speed
+// ---------- Pulse width values (must stay inside each required range) ----------
+const int slowPWM = 110; // Slow speed: range 100-150
+const int mediumPWM = 175; // Medium speed: range 150-200
+const int fastPWM = 250; // Fast speed: range 200-255
+// ---------- Variables ----------
+int potValue = 0; // Stores the raw potentiometer reading (0-1023)
+int currentPWM = 0; // Stores the pulse width currently sent to the motor
+// Timer variables so the Serial Monitor prints at a steady pace
+// instead of flooding the screen every loop cycle
+unsigned long lastPrintTime = 0; // Time (ms) of the last Serial print
+const unsigned long printInterval = 500; // Print every 500 ms
+// ---------- setup() runs once when the Arduino powers on or resets ----------
+void setup() {
+pinMode(enablePin, OUTPUT); // Enable pin sends the PWM speed signal to the L293D
+pinMode(in1Pin, OUTPUT); // Direction pin 1 is an output
+pinMode(in2Pin, OUTPUT); // Direction pin 2 is an output
+pinMode(led1Pin, OUTPUT); // LED 1 pin is an output
+pinMode(led2Pin, OUTPUT); // LED 2 pin is an output
+pinMode(led3Pin, OUTPUT); // LED 3 pin is an output
+// Note: analog input pins (A1) do not need pinMode to be read
+// Set the motor direction once. IN1 HIGH and IN2 LOW spins the motor one way.
+// If the motor spins the opposite way you want, swap HIGH and LOW here.
+digitalWrite(in1Pin, HIGH);
+digitalWrite(in2Pin, LOW);
+Serial.begin(9600); // Start serial communication at 9600 baud so we can
+// print to the Serial Monitor
+}
+// ---------- loop() runs over and over forever ----------
+void loop() {
+// Read the potentiometer: returns a value from 0 (one end) to 1023 (other end)
+potValue = analogRead(potPin);
+// Split the potentiometer's range into three equal zones.
+// Each zone sets the motor speed and turns on the matching LED.
+if (potValue < 341) {
+// ----- ZONE 1: SLOW SPEED -----
+currentPWM = slowPWM; // Choose the slow pulse width
+digitalWrite(led1Pin, HIGH); // LED 1 on
+digitalWrite(led2Pin, LOW); // LED 2 off
+digitalWrite(led3Pin, LOW); // LED 3 off
+}
+else if (potValue < 682) {
+// ----- ZONE 2: MEDIUM SPEED -----
+currentPWM = mediumPWM; // Choose the medium pulse width
+digitalWrite(led1Pin, LOW); // LED 1 off
+digitalWrite(led2Pin, HIGH); // LED 2 on
+digitalWrite(led3Pin, LOW); // LED 3 off
+}
+else {
+// ----- ZONE 3: FAST SPEED -----
+currentPWM = fastPWM; // Choose the fast pulse width
+digitalWrite(led1Pin, LOW); // LED 1 off
+digitalWrite(led2Pin, LOW); // LED 2 off
+digitalWrite(led3Pin, HIGH); // LED 3 on
+}
+// Send the chosen pulse width to the L293D enable pin.
+// analogWrite() produces a PWM signal (0-255); a higher value means the
+// motor receives power for a larger fraction of each cycle, so it spins faster.
+analogWrite(enablePin, currentPWM);
+// Timer: only print if at least 500 ms have passed since the last print.
+// millis() returns the number of milliseconds since the program started.
+if (millis() - lastPrintTime >= printInterval) {
+lastPrintTime = millis(); // Reset the timer
+Serial.print("Pulse width: "); // Label for the value
+Serial.println(currentPWM); // Print the current pulse width and go to a new line
+}
+}

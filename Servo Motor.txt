@@ -1,0 +1,53 @@
+#include <Servo.h>
+Servo ME250;
+
+int trigPin = 5;
+int echoPin = 3;
+int greenLED = 6;
+int redLED = 2;
+
+long duration;
+int distance;
+
+void setup()
+{
+  Serial.begin(9600);
+  ME250.attach(9);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  pinMode(greenLED, OUTPUT);
+  pinMode(redLED, OUTPUT);
+}
+
+void loop()
+{
+  // send out the ultrasonic pulse
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  // read the echo and convert to cm
+  duration = pulseIn(echoPin, HIGH);
+  distance = duration * 0.034 / 2;
+  Serial.println(distance);
+
+  if (distance < 15)
+  {
+    // object is close: gate opens, green on
+    ME250.write(180);
+    digitalWrite(greenLED, HIGH);
+    digitalWrite(redLED, LOW);
+  }
+  else
+  {
+    // object is far: gate closes, red on
+    ME250.write(90);
+    digitalWrite(greenLED, LOW);
+    digitalWrite(redLED, HIGH);
+  }
+
+  delay(100);
+}
+

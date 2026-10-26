@@ -1,0 +1,50 @@
+#include <Stepper.h>
+
+const int speedSteps = 512;    // used only for the Stepper speed timing
+const int realSteps = 2048;    // actual steps per full revolution (angles)
+const int CCW = -1;            // change to 1 if counterclockwise moves the wrong way
+
+Stepper ME250stepper(speedSteps, 6, 10, 9, 11);
+
+int angle = 0;
+
+int degToSteps(int deg) {
+  return (long)deg * realSteps / 360;
+}
+
+void setup() {
+  Serial.begin(9600);
+  delay(3000);
+
+  // Task 1
+  ME250stepper.setSpeed(40);
+
+  // Task 2
+  angle = 0;
+  Serial.println(angle);
+  delay(1000);
+
+  ME250stepper.step(CCW * degToSteps(90));    // 90 deg counterclockwise
+  angle = -90;
+  Serial.println(angle);
+  delay(500);
+
+  ME250stepper.step(-CCW * degToSteps(90));   // back to 0
+  angle = 0;
+  Serial.println(angle);
+
+  // Task 3
+  delay(500);
+  ME250stepper.setSpeed(20);
+
+  ME250stepper.step(-CCW * degToSteps(180));  // 180 deg clockwise
+  angle = 180;
+  Serial.println(angle);
+  delay(500);
+
+  ME250stepper.step(CCW * degToSteps(180));   // back to 0
+  angle = 0;
+  Serial.println(angle);
+}
+
+void loop() {}
