@@ -1,0 +1,34 @@
+// Arduino #9: Potentiometer controls passive buzzer pitch
+//
+// Wiring:
+//   Potentiometer: outer pins to 5V and GND, middle pin (wiper) to A0
+//   Passive buzzer: + pin to digital pin 8, - pin to GND
+
+const int potPin = A0;     // potentiometer middle pin
+const int buzzerPin = 8;   // passive buzzer + pin
+
+void setup() {
+  Serial.begin(9600);      // to check pot readings in Serial Monitor
+  pinMode(buzzerPin, OUTPUT);
+}
+
+void loop() {
+  int potValue = analogRead(potPin);   // reads 0-1023
+
+  Serial.print("Pot: ");
+  Serial.print(potValue);
+
+  if (potValue == 0) {
+    noTone(buzzerPin);                 // silent at 0
+    Serial.println("  -> silent");
+  } else {
+    // Map the reading to an audible frequency range
+    int frequency = map(potValue, 1, 1023, 100, 2000);
+    tone(buzzerPin, frequency);
+    Serial.print("  -> Frequency: ");
+    Serial.print(frequency);
+    Serial.println(" Hz");
+  }
+
+  delay(20);
+}
